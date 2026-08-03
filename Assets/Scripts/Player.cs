@@ -13,8 +13,47 @@ public class Player : MonoBehaviour {
         Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
-        transform.position += moveDir * moveSpeed * Time.deltaTime;
 
+        float playerRadius = 0.7f;
+        float playerHeight = 2f;
+        float moveDistance = moveSpeed * Time.deltaTime;
+
+        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
+
+        if (!canMove) //to try to move diagonal agaisnt wall
+        {
+            //cannot move towards moveDir
+            //Attempt to move only on X
+            Vector3 moveDirX = new Vector3(moveDir.x, 0f, 0f).normalized;
+            canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
+            if (canMove)
+            {
+                //can move only on X
+                moveDir = moveDirX;
+            }
+            else
+            {
+                //cannot move on X
+                //Attempt to move on Z
+                Vector3 moveDirZ = new Vector3(0f, 0f, moveDir.z).normalized;
+                canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
+
+                if (canMove)
+                {
+                    //can move only on Z
+                    moveDir = moveDirZ;
+                }
+                else
+                {
+                    //Cannot move in any direction
+                }
+            }
+        }
+
+        if (canMove) //apply movement
+        {
+            transform.position += moveDir * moveDistance;
+        }
         isWalking = moveDir != Vector3.zero;
 
         transform.forward = Vector3.
